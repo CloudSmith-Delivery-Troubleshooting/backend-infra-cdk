@@ -23,14 +23,15 @@ export class BackendInfraStack extends cdk.Stack {
     const vpc = new ec2.Vpc(this, `${prefix}-VPC`, {
       maxAzs: 2,
       natGateways: 1,
+      cidr: '10.0.0.0/16',
       subnetConfiguration: [
         {
-          cidrMask: 24,
+          cidrMask: 16,
           name: `${prefix}-Public`,
           subnetType: ec2.SubnetType.PUBLIC,
         },
         {
-          cidrMask: 24,
+          cidrMask: 16,
           name: `${prefix}-Private`,
           subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
         },
