@@ -2,6 +2,7 @@
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 import { BackendInfraStack } from '../lib/backend-infra-stack';
+import { IamDemoStack } from '../lib/iam-demo-stack';
 
 const app = new cdk.App();
 
@@ -24,6 +25,17 @@ new BackendInfraStack(app, `${prefix}-BackendInfraStack`, {
   prefix,
   env,
   description: `Backend Infrastructure Stack with prefix: ${prefix}`,
+  tags: {
+    Environment: prefix,
+    Project: 'backend-infra-cdk',
+    ManagedBy: 'CDK',
+  },
+});
+
+new IamDemoStack(app, `${prefix}-IamDemoStack`, {
+  prefix,
+  env,
+  description: `IAM Demo Stack`,
   tags: {
     Environment: prefix,
     Project: 'backend-infra-cdk',
