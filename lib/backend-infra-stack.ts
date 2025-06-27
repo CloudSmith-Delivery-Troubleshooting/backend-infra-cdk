@@ -68,21 +68,18 @@ export class BackendInfraStack extends cdk.Stack {
         cluster,
         cpu: 512,
         memoryLimitMiB: 1024,
-        desiredCount: 2,
+        desiredCount: 1,
         listenerPort: 80,
         publicLoadBalancer: true,
         taskImageOptions: {
-          image: ecs.ContainerImage.fromEcrRepository(ecrRepository, 'latest'),
+          image: ecs.ContainerImage.fromRegistry('python:3.9-slim'),
           containerName: `${prefix}-backend-container`,
           containerPort: 3000,
           logDriver: ecs.LogDriver.awsLogs({
             streamPrefix: 'ecs',
             logGroup: logGroup,
           }),
-          environment: {
-            NODE_ENV: 'production',
-            PORT: '3000',
-          },
+          command: ['-m', 'http.server', '3000'],
         },
         loadBalancerName: `${prefix}-ALB`,
       }
@@ -90,7 +87,7 @@ export class BackendInfraStack extends cdk.Stack {
 
     // Configure health check
     fargateService.targetGroup.configureHealthCheck({
-      path: '/health',
+      path: '/',
       port: '3000',
       protocol: cdk.aws_elasticloadbalancingv2.Protocol.HTTP,
       healthyHttpCodes: '200',
