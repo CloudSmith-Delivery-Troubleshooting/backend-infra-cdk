@@ -3,31 +3,13 @@ name: Deploy Backend Infrastructure CDK
 on:
   push:
     branches:
-      - main
-      - develop
-  pull_request:
-    branches:
-      - main
-  workflow_dispatch:
-    inputs:
-      prefix:
-        description: 'Resource prefix (leave empty for auto)'
-        required: false
-        type: string
-      environment:
-        description: 'Target environment'
-        required: true
-        default: 'dev'
-        type: choice
-        options:
-          - dev
-          - staging
-          - prod
+      - p2-branch
 
 env:
   NODE_VERSION: '20'
   AWS_REGION: ${{ secrets.AWS_REGION }}
   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+  PREFIX: p2
 
 jobs:
   # CDK diff job for pull requests
@@ -59,14 +41,6 @@ jobs:
 
       - name: Build project
         run: npm run build
-
-      - name: Set environment variables
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.prefix }}" ]; then
-            echo "PREFIX=${{ github.event.inputs.prefix }}" >> $GITHUB_ENV
-          else
-            echo "PREFIX=pr-${{ github.event.number }}" >> $GITHUB_ENV
-          fi
 
       - name: CDK Bootstrap (if needed)
         run: npx cdk bootstrap --require-approval never
@@ -110,18 +84,6 @@ jobs:
 
       - name: Build project
         run: npm run build
-
-      - name: Set environment variables
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.prefix }}" ]; then
-            echo "PREFIX=${{ github.event.inputs.prefix }}" >> $GITHUB_ENV
-          elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            echo "PREFIX=prod" >> $GITHUB_ENV
-          elif [ "${{ github.ref }}" = "refs/heads/develop" ]; then
-            echo "PREFIX=staging" >> $GITHUB_ENV
-          else
-            echo "PREFIX=dev" >> $GITHUB_ENV
-          fi
 
       - name: CDK Bootstrap
         run: npx cdk bootstrap --require-approval never
