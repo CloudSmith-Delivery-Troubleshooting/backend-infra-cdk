@@ -129,7 +129,7 @@ jobs:
           PREFIX: ${{ env.PREFIX }}
 
       - name: CDK Deploy
-        run: npx cdk deploy --require-approval never --outputs-file outputs.json
+        run: npx cdk deploy ${{ env.PREFIX}}-Ec2TestStack --require-approval never --outputs-file outputs.json
         env:
           PREFIX: ${{ env.PREFIX }}
 
