@@ -79,7 +79,7 @@ export class BackendInfraStack extends cdk.Stack {
             streamPrefix: 'ecs',
             logGroup: logGroup,
           }),
-          command: ['-m', 'http.server', '3000'],
+          entryPoint: ['python', '-m', 'http.server', '3000'],
         },
         loadBalancerName: `${prefix}-ALB`,
       }
