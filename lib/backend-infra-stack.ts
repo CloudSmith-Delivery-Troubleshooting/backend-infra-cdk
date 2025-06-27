@@ -115,114 +115,6 @@ export class BackendInfraStack extends cdk.Stack {
       scaleOutCooldown: cdk.Duration.seconds(300),
     });
 
-    // Create SNS Topic for Alarms
-    const alarmTopic = new sns.Topic(this, `${prefix}-Alarm-Topic`, {
-      topicName: `${prefix}-backend-alarms`,
-      displayName: `${prefix} Backend Infrastructure Alarms`,
-    });
-
-    // CloudWatch Alarms
-
-    // High CPU Utilization Alarm
-    const highCpuAlarm = new cloudwatch.Alarm(this, `${prefix}-High-CPU-Alarm`, {
-      alarmName: `${prefix}-HighCPUUtilization`,
-      alarmDescription: 'Alarm when CPU exceeds 80%',
-      metric: fargateService.service.metricCpuUtilization({
-        period: cdk.Duration.minutes(5),
-        statistic: 'Average',
-      }),
-      threshold: 80,
-      evaluationPeriods: 2,
-      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-    });
-
-    highCpuAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(alarmTopic));
-
-    // High Memory Utilization Alarm
-    const highMemoryAlarm = new cloudwatch.Alarm(this, `${prefix}-High-Memory-Alarm`, {
-      alarmName: `${prefix}-HighMemoryUtilization`,
-      alarmDescription: 'Alarm when Memory exceeds 85%',
-      metric: fargateService.service.metricMemoryUtilization({
-        period: cdk.Duration.minutes(5),
-        statistic: 'Average',
-      }),
-      threshold: 85,
-      evaluationPeriods: 2,
-      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-    });
-
-    highMemoryAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(alarmTopic));
-
-    // Application Load Balancer Target Unhealthy Alarm
-    const unhealthyTargetsAlarm = new cloudwatch.Alarm(this, `${prefix}-Unhealthy-Targets-Alarm`, {
-      alarmName: `${prefix}-UnhealthyTargets`,
-      alarmDescription: 'Alarm when there are unhealthy targets behind the load balancer',
-      metric: fargateService.targetGroup.metricUnhealthyHostCount({
-        period: cdk.Duration.minutes(1),
-        statistic: 'Average',
-      }),
-      threshold: 1, 
-      evaluationPeriods: 2,
-      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-    });
-
-    unhealthyTargetsAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(alarmTopic));
-
-    // HTTP 5xx Error Rate Alarm
-    const http5xxAlarm = new cloudwatch.Alarm(this, `${prefix}-HTTP-5xx-Alarm`, {
-      alarmName: `${prefix}-HTTP5xxErrors`,
-      alarmDescription: 'Alarm when HTTP 5xx error rate is high',
-      metric: fargateService.loadBalancer.metricHttpCodeTarget(
-        cdk.aws_elasticloadbalancingv2.HttpCodeTarget.TARGET_5XX_COUNT,
-        {
-          period: cdk.Duration.minutes(5),
-          statistic: 'Sum',
-        }
-      ),
-      threshold: 10,
-      evaluationPeriods: 2,
-      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-    });
-
-    http5xxAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(alarmTopic));
-
-    // Response Time Alarm
-    const responseTimeAlarm = new cloudwatch.Alarm(this, `${prefix}-Response-Time-Alarm`, {
-      alarmName: `${prefix}-HighResponseTime`,
-      alarmDescription: 'Alarm when response time exceeds 2 seconds',
-      metric: fargateService.loadBalancer.metricTargetResponseTime({
-        period: cdk.Duration.minutes(5),
-        statistic: 'Average',
-      }),
-      threshold: 2,
-      evaluationPeriods: 3,
-      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-    });
-
-    responseTimeAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(alarmTopic));
-
-    // Task Count Alarm (for when service is down)
-    const taskCountAlarm = new cloudwatch.Alarm(this, `${prefix}-Task-Count-Alarm`, {
-      alarmName: `${prefix}-LowTaskCount`,
-      alarmDescription: 'Alarm when running task count is below desired',
-      metric: new cloudwatch.Metric({
-        namespace: 'AWS/ECS',
-        metricName: 'RunningTaskCount',
-        dimensionsMap: {
-          ServiceName: fargateService.service.serviceName,
-          ClusterName: cluster.clusterName,
-        },
-        period: cdk.Duration.minutes(1),
-        statistic: 'Average',
-      }),
-      threshold: 1,
-      comparisonOperator: cloudwatch.ComparisonOperator.LESS_THAN_THRESHOLD,
-      evaluationPeriods: 2,
-      treatMissingData: cloudwatch.TreatMissingData.BREACHING,
-    });
-
-    taskCountAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(alarmTopic));
-
     // Grant ECR permissions to task role
     ecrRepository.grantPull(fargateService.taskDefinition.taskRole);
 
@@ -257,10 +149,6 @@ export class BackendInfraStack extends cdk.Stack {
       exportName: `${prefix}-LogGroupName`,
     });
 
-    new cdk.CfnOutput(this, 'SNSTopicArn', {
-      value: alarmTopic.topicArn,
-      description: 'SNS Topic ARN for Alarms',
-      exportName: `${prefix}-SNSTopicArn`,
-    });
+
   }
 }
