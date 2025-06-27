@@ -2,6 +2,8 @@
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 import { BackendInfraStack } from '../lib/backend-infra-stack';
+import { S3BucketStack } from '../lib/s3-bucket-stack';
+import { AsyncWorkerStack } from '../lib/async-worker-stack';
 
 const app = new cdk.App();
 
@@ -29,6 +31,18 @@ new BackendInfraStack(app, `${prefix}-BackendInfraStack`, {
     Project: 'backend-infra-cdk',
     ManagedBy: 'CDK',
   },
+});
+
+// Create stack with missing required CFN parameter - will fail deployment without parameter
+new S3BucketStack(app, `${prefix}-S3BucketStack`, {
+  env,
+  description: 'Stack demonstrating missing required CloudFormation parameter error',
+});
+
+// Create stack for async worker
+new AsyncWorkerStack(app, `${prefix}-AsyncWorkerStack`, {
+  env,
+  description: 'Stack adding multiple resources for async worker',
 });
 
 app.synth();
