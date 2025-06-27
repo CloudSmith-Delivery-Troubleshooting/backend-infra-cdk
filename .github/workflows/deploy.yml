@@ -3,31 +3,13 @@ name: Deploy Backend Infrastructure CDK
 on:
   push:
     branches:
-      - main
-      - develop
-  pull_request:
-    branches:
-      - main
-  workflow_dispatch:
-    inputs:
-      prefix:
-        description: 'Resource prefix (leave empty for auto)'
-        required: false
-        type: string
-      environment:
-        description: 'Target environment'
-        required: true
-        default: 'dev'
-        type: choice
-        options:
-          - dev
-          - staging
-          - prod
+      - p4-branch
 
 env:
   NODE_VERSION: '20'
   AWS_REGION: ${{ secrets.AWS_REGION }}
   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+  PREFIX: p4
 
 jobs:
   # CDK diff job for pull requests
@@ -59,24 +41,6 @@ jobs:
 
       - name: Build project
         run: npm run build
-
-      - name: Set environment variables
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.prefix }}" ]; then
-            echo "PREFIX=${{ github.event.inputs.prefix }}" >> $GITHUB_ENV
-          else
-            echo "PREFIX=pr-${{ github.event.number }}" >> $GITHUB_ENV
-          fi
-
-      - name: CDK Bootstrap (if needed)
-        run: npx cdk bootstrap --require-approval never
-        env:
-          PREFIX: ${{ env.PREFIX }}
-
-      - name: CDK Diff
-        run: npx cdk diff --require-approval never
-        env:
-          PREFIX: ${{ env.PREFIX }}
 
   # Deploy job for main/develop branches and manual triggers
   deploy:
@@ -111,25 +75,13 @@ jobs:
       - name: Build project
         run: npm run build
 
-      - name: Set environment variables
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.prefix }}" ]; then
-            echo "PREFIX=${{ github.event.inputs.prefix }}" >> $GITHUB_ENV
-          elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            echo "PREFIX=prod" >> $GITHUB_ENV
-          elif [ "${{ github.ref }}" = "refs/heads/develop" ]; then
-            echo "PREFIX=staging" >> $GITHUB_ENV
-          else
-            echo "PREFIX=dev" >> $GITHUB_ENV
-          fi
-
       - name: CDK Bootstrap
         run: npx cdk bootstrap --require-approval never
         env:
           PREFIX: ${{ env.PREFIX }}
 
       - name: CDK Deploy
-        run: npx cdk deploy --require-approval never --outputs-file outputs.json
+        run: npx cdk deploy ${{ env.PREFIX}}-S3BucketStack --require-approval never --outputs-file outputs.json
         env:
           PREFIX: ${{ env.PREFIX }}
 
@@ -154,38 +106,3 @@ jobs:
             cat outputs.json >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
           fi
-
-  # Cleanup job for PR environments (optional)
-  cleanup-pr:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && github.event.action == 'closed'
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/GitHubActionsRole
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build project
-        run: npm run build
-
-      - name: Cleanup PR environment
-        run: |
-          export PREFIX=pr-${{ github.event.number }}
-          npx cdk destroy --force || echo "Stack may not exist or already deleted"
-        continue-on-error: true
