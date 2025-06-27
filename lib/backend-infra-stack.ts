@@ -226,6 +226,9 @@ export class BackendInfraStack extends cdk.Stack {
 
     taskCountAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(alarmTopic));
 
+    // Grant ECR permissions to task role
+    ecrRepository.grantPull(fargateService.taskDefinition.taskRole);
+
     // Outputs
     new cdk.CfnOutput(this, 'LoadBalancerDNS', {
       value: fargateService.loadBalancer.loadBalancerDnsName,
