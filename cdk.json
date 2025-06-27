@@ -20,7 +20,6 @@
     "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
     "@aws-cdk/core:checkSecretUsage": true,
     "@aws-cdk/core:target": "aws-cdk-lib",
-    "@aws-cdk/core:enableStackNameDuplicates": false,
     "aws-cdk:enableDiffNoFail": true,
     "@aws-cdk/core:stackRelativeExports": true,
     "@aws-cdk/aws-ecr-assets:dockerIgnoreSupport": true,
