@@ -1,6 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
-import { BackendInfraStack } from './backend-infra-stack';
+import { BackendInfraStack } from '../lib/backend-infra-stack';
 
 describe('BackendInfraStack', () => {
   let app: cdk.App;
