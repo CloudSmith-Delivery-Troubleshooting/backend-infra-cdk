@@ -72,7 +72,7 @@ export class BackendInfraStack extends cdk.Stack {
         listenerPort: 80,
         publicLoadBalancer: true,
         taskImageOptions: {
-          image: ecs.ContainerImage.fromRegistry('python:3.9-slim'),
+          image: ecs.ContainerImage.fromRegistry('myproject/web.server'),
           containerName: `${prefix}-backend-container`,
           containerPort: 3000,
           logDriver: ecs.LogDriver.awsLogs({
