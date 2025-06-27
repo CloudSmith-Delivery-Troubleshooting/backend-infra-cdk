@@ -50,7 +50,7 @@ jobs:
           cat ~/.npmrc
 
       - name: Install dependencies
-        run: npm ci --registry 
+        run: npm ci
 
       - name: Run TypeScript compilation
         run: npm run build
